@@ -107,7 +107,6 @@ class Asp
   def load_testing_data
     load_testing_no_terminales
     load_testing_simbolos_de_entrada
-    load_nicknames
     load_testing_tabla
   end
 
@@ -115,8 +114,21 @@ class Asp
     @no_terminales = ['E',"E'","T","T'","F"]
   end
 
+  def load_no_terminales_nicknames
+    @no_terminales_nicknames = []
+    @no_terminales.each{|nt| @no_terminales_nicknames << @nicknames.key(nt)}
+    puts "\nno_terminales_nicknames => #{@no_terminales_nicknames.inspect}"
+  end
+
   def load_testing_simbolos_de_entrada
     @simbolos_de_entrada = ['id','+','*','(',')','$']
+  end
+
+  def load_simbolos_de_entrada_nicknames
+    @simbolos_de_entrada_nicknames = []
+    @simbolos_de_entrada.each{|se| @simbolos_de_entrada_nicknames << @nicknames.key(se)}
+    @simbolos_de_entrada.each{|se| @simbolos_de_entrada_nicknames << @nicknames.key(se)}
+    puts "\nsimbolos_de_entrada_nicknames => #{@simbolos_de_entrada_nicknames.inspect}"
   end
 
   def load_testing_tabla
@@ -134,6 +146,47 @@ class Asp
         @tabla[nt][se] = producciones[i]
         i+=1
       end
+#      v.sort_by(&:length).reverse
+
+    end
+  end
+
+  def translate_to_nickname(produccion)
+    translated = produccion
+    if translated
+      sv = @nicknames.values.sort_by(&:length).reverse
+      sv.each{|v| translated = translated.gsub(v,@nicknames.key(v))}
+    end
+    translated
+  end
+
+  def load_tabla_nicknames
+    @tabla_nicknames = {}
+
+    i = 0
+    @no_terminales.each do |nt|
+      @tabla_nicknames[@nicknames.key(nt)] = {}
+      @tabla_nicknames[@nicknames.key(nt)] = {}
+      @simbolos_de_entrada.each do |se|
+        @tabla_nicknames[@nicknames.key(nt)][@nicknames.key(se)] = translate_to_nickname(@tabla[nt][se])
+        @tabla_nicknames[@nicknames.key(nt)][@nicknames.key(se)] = translate_to_nickname(@tabla[nt][se])
+        i+=1
+      end
+    end
+
+  end
+
+  def imprimir_tabla_nicknames
+    @no_terminales_nicknames.each do |nt|
+      row = ''
+      @simbolos_de_entrada_nicknames.each do |se|
+        row+= "#{@tabla_nicknames[nt][se].inspect} "
+      end
+      puts row
+      sub_r = '_'
+      row.length.times {sub_r+='_'}
+      puts sub_r
+      puts "\n"
     end
   end
 
@@ -141,7 +194,8 @@ class Asp
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
     puts "Filling up nicknames"
     puts "--------------------"
-    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i] = e}
+    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i.to_s] = e}
+    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i.to_s] = e}
     puts "nicknames => #{@nicknames.inspect}"
     puts "==================================================="
   end
@@ -292,6 +346,14 @@ class Asp
     @errores = []
     @testing ? load_testing_data : ask_user
     imprimir_tabla
+
+
+    load_testing_simbolos_de_entrada
+    load_nicknames
+    load_no_terminales_nicknames
+    load_simbolos_de_entrada_nicknames
+    load_tabla_nicknames
+    imprimir_tabla_nicknames
     leer_entrada
 
   end
