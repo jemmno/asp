@@ -17,6 +17,7 @@ class Asp
     @no_terminales = []
     @simbolos_de_entrada = []
     @entrada = ''
+    @entrada_nickname = {}
     @errores = []
     @pila = []
     @x = ''
@@ -38,7 +39,7 @@ class Asp
       puts 'Algo mas?..'
       puts '0) NO'
       puts '1) SI'
-      algo_mas = gets.chomp
+        algo_mas = gets.chomp
       algo_mas == '1' ? algo_mas= true : algo_mas= false
     end
   end
@@ -115,7 +116,7 @@ class Asp
   end
 
   def load_testing_simbolos_de_entrada
-    @simbolos_de_entrada = ['i','+','*','(',')','$']
+    @simbolos_de_entrada = ['id','+','*','(',')','$']
   end
 
   def load_testing_tabla
@@ -123,7 +124,7 @@ class Asp
     ee = [nil, "+Te",nil,nil,'%','%']
     t = ["Ft",nil,nil,"Ft",nil,nil]
     tt = [nil,'%', "*Ft",nil, '%','%']
-    f = ['i',nil,nil,'(E)', nil,nil]
+    f = ['id',nil,nil,'(E)', nil,nil]
 
     producciones = e+ee+t+tt+f
     i = 0
@@ -136,6 +137,15 @@ class Asp
     end
   end
 
+  def fill_entrada_nickname
+    puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
+    puts "Filling up nicknames"
+    puts "--------------------"
+    @entrada.each_with_index{|e,i| @entrada_nickname[i] = e}
+    puts "nicknames => #{@entrada_nickname.inspect}"
+    puts "==================================================="
+  end
+
   def leer_entrada
     puts "## Introduzca la cadena de entrada ##"
     puts "Obs: cada simbolo debe estar seguido de un espacio"
@@ -143,6 +153,8 @@ class Asp
     puts "   Los terminales 'prima', se representan por la minuscula de su letra. Ej: para T' es t"
     @entrada = @testing_entrada || gets.chomp.strip
     @entrada = @entrada.split(/[\sw]/)
+    fill_entrada_nickname
+
     puts @entrada.inspect
     verificar_entrada
     procesar if @errores.length == 0
