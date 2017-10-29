@@ -12,6 +12,7 @@ class Asp
   attr_accessor :testing
 
   def initialize(testing=false,testing_entrada=nil)
+    @show_translating = false
     @testing = testing
     @testing_entrada = testing_entrada
     @tabla = {}
@@ -117,7 +118,7 @@ class Asp
   def load_no_terminales_nicknames
     @no_terminales_nicknames = []
     @no_terminales.each{|nt| @no_terminales_nicknames << @nicknames.key(nt)}
-    puts "\nno_terminales_nicknames => #{@no_terminales_nicknames.inspect}"
+    puts "\nno_terminales_nicknames => #{@no_terminales_nicknames.inspect}"  if @show_translating
   end
 
   def load_testing_simbolos_de_entrada
@@ -128,7 +129,7 @@ class Asp
     @simbolos_de_entrada_nicknames = []
     @simbolos_de_entrada.each{|se| @simbolos_de_entrada_nicknames << @nicknames.key(se)}
     @simbolos_de_entrada.each{|se| @simbolos_de_entrada_nicknames << @nicknames.key(se)}
-    puts "\nsimbolos_de_entrada_nicknames => #{@simbolos_de_entrada_nicknames.inspect}"
+    puts "\nsimbolos_de_entrada_nicknames => #{@simbolos_de_entrada_nicknames.inspect}" if @show_translating
   end
 
   def load_testing_tabla
@@ -146,8 +147,6 @@ class Asp
         @tabla[nt][se] = producciones[i]
         i+=1
       end
-#      v.sort_by(&:length).reverse
-
     end
   end
 
@@ -168,7 +167,6 @@ class Asp
       @tabla_nicknames[@nicknames.key(nt)] = {}
       @tabla_nicknames[@nicknames.key(nt)] = {}
       @simbolos_de_entrada.each do |se|
-        @tabla_nicknames[@nicknames.key(nt)][@nicknames.key(se)] = translate_to_nickname(@tabla[nt][se])
         @tabla_nicknames[@nicknames.key(nt)][@nicknames.key(se)] = translate_to_nickname(@tabla[nt][se])
         i+=1
       end
@@ -192,11 +190,12 @@ class Asp
 
   def load_nicknames
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
-    puts "Filling up nicknames"
-    puts "--------------------"
-    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i.to_s] = e}
-    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i.to_s] = e}
-    puts "nicknames => #{@nicknames.inspect}"
+    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[(i+65).chr] = e}
+    if @show_translating
+      puts "Filling up nicknames"
+      puts "--------------------"
+      puts "nicknames => #{@nicknames.inspect}"
+    end
     puts "==================================================="
   end
 
@@ -213,6 +212,16 @@ class Asp
   end
 
   def verificar_entrada
+    @entrada_nickname = []
+    @entrada.each{|e| @entrada_nickname << translate_to_nickname(e)}
+    puts "Entrada : #{@entrada.inspect}"
+    puts "Entrada nickname: #{@entrada_nickname.inspect}" if @show_translating
+
+    @testing = testing
+    #using nicknames
+    @entrada = @entrada_nickname
+    @simbolos_de_entrada = @simbolos_de_entrada_nicknames
+    #------------------------------------------------
     @entrada.each do |token|
       unless @simbolos_de_entrada.include? token
         @errores << "el simbolo #{token} no pertenece a los simbolos de entrada"
@@ -221,27 +230,20 @@ class Asp
     end
   end #verificar_entrada
 
-  def inicializar_var_procesar
-    @entrada << '$'
-    @ip = 0
-    @pila = ['$']<< no_terminales[0]
-    @x = @pila.last
-  end #inicializar_var_procesar
-
   def avanzar_entrada
     @ip+=1
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
     puts "Avanzando entrada:"
-    puts "IP ahora es #{@ip}, apunta a #{@entrada[@ip]}"
+    puts "IP ahora es #{@ip}, apunta a #{@nicknames[@entrada[@ip]]}"
     puts "==================================================="
   end
 
   def sacar_de_la_pila
     # sacar de la pila y avanzar ip
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
-    puts "Pila Actual: #{@pila}" if @testing
-    puts "Sacando de la pila el elemento: #{@pila.pop}"
-    puts "Pila despues: #{@pila}"  if @testing
+    puts "Pila Actual: #{translate_array(@pila)}" if @testing
+    puts "Sacando de la pila el elemento: #{@nicknames[@pila.pop]}"
+    puts "Pila despues: #{translate_array(@pila)}"  if @testing
     puts "==================================================="
   end
 
@@ -260,11 +262,11 @@ class Asp
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
     puts "You got Error 2!"
     puts '---------------'
-    puts "Tabla[#{@x},#{@entrada[@ip]}] es indefinido."
-    puts "Insertando caracter sync (~) en Tabla[#{@x},#{@entrada[@ip]}]."
+    puts "Tabla[#{@nicknames[@x]},#{@nicknames[@entrada[@ip]]}] es indefinido."
+    puts "Insertando caracter sync (~) en Tabla[#{@nicknames[@x]},#{@nicknames[@entrada[@ip]]}]."
     @tabla[@x][@entrada[@ip]] = '~' #insertar caracter de sincronizacion
     puts "Dejando el tope de la pila como esta."
-    puts "Pila: #{@pila.inspect}"
+    puts "Pila: #{translate_array(@pila).inspect}"
     puts "==================================================="
     avanzar_entrada
   end
@@ -273,8 +275,9 @@ class Asp
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
     puts 'Cargando produccion invertida'
     puts '-----------------------------'
+    puts "Produccion: #{@tabla_original[@nicknames[@x]][@nicknames[@entrada[@ip]]]}"
     @pila = @pila+invertir(@tabla[@x][@entrada[@ip]])
-    puts "Pila despues con nuevos elementos: #{@pila}"  if @testing
+    puts "Pila despues con nuevos elementos: #{translate_array(@pila)}"  if (@testing or @show_translating)
     puts "==================================================="
   end
 
@@ -288,27 +291,52 @@ class Asp
   def show_output
     #Enviar a la salida la produccion
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
-    puts "Produccion: #{@x} => #{@tabla[@x][@entrada[@ip]]}"
+    puts "Produccion: #{@nicknames[@x]} => #{@tabla_original[@nicknames[@x]][@nicknames[@entrada[@ip]]]}"
     puts "==================================================="
   end
 
+  def inicializar_var_procesar
+    #using nicknames
+    @no_terminales = @no_terminales_nicknames
+    @fin_cadena = @nicknames.key('$')
+    #------------------------------------------------
+    @entrada << @fin_cadena
+    @ip = 0
+    @pila = [@fin_cadena]<< @no_terminales[0]
+    @x = @pila.last
+  end #inicializar_var_procesar
+
+  def translate_array(a)
+    puts "Traslating: #{a.inspect}" if @show_translating
+    p=[]
+    a.each{|v| p << @nicknames[v]}
+    p
+  end
   # ejecuta el algoritmo Asp
   def procesar
+    #using nicknames
+    @tabla_original = @tabla
+    @tabla = @tabla_nicknames
+    @entrada = @entrada_nickname
+    #------------------------------------------------
     nro_proceso = 0
     puts 'PROCESANDO'
     puts '---------'
     inicializar_var_procesar
-    while (@x != '$') do
+    while (@x != @nicknames.key('$')) do
       nro_proceso += 1
       puts "\n\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
       puts "(#{nro_proceso}) - Datos a procesar:"
       puts '----------------------'
-      puts "Pila: #{@pila.inspect}"
-      puts "Entrada: #{@entrada}"
+      p = translate_array(@pila)
+      puts "Pila: #{p.inspect} "
+      p = translate_array(@entrada)
+      puts "Entrada: #{p}"
       puts "IP: #{@ip}"
-      puts "Token: #{@entrada[@ip]}"
-      puts "Item de la pila (X): #{@x}"
+      puts "Token: #{@nicknames[@entrada[@ip]]}"
+      puts "Item de la pila (X): #{@nicknames[@x]}"
       puts "==================================================="
+
       if @x == @entrada[@ip]
         sacar_y_avanzar
       elsif simbolos_de_entrada.include? @x
@@ -324,12 +352,13 @@ class Asp
       pause?
     end
     puts "\n\n\n============================"
-    puts "| Producciones Realizadas: #{@producciones_realizadas.join('=>')}"
+    puts "| Producciones Realizadas: #{translate_array(@producciones_realizadas).join('=>')}"
     puts "============================"
+      imprimir_tabla
   end #procesar
 
   def invertir(produccion)
-      puts "Produccion: #{produccion}"
+
       produccion = if produccion == '%'
         puts ">>> La produccion es vacia (%) <<<"
         []
@@ -337,7 +366,7 @@ class Asp
         produccion.reverse.split ''
       end
 
-      puts "Produccion invertida: #{produccion}"
+      puts "Produccion invertida: #{translate_array(produccion)}"
       @producciones_realizadas += produccion
       produccion
   end
@@ -347,13 +376,13 @@ class Asp
     @testing ? load_testing_data : ask_user
     imprimir_tabla
 
-
     load_testing_simbolos_de_entrada
+
     load_nicknames
     load_no_terminales_nicknames
     load_simbolos_de_entrada_nicknames
     load_tabla_nicknames
-    imprimir_tabla_nicknames
+    imprimir_tabla_nicknames if @show_translating
     leer_entrada
 
   end
