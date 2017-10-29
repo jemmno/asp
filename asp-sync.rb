@@ -3,6 +3,7 @@
 # asp = Asp.new(true, 'id + id')
 # asp.iniciar
 # O load 'asp.rb'; asp = Asp.new(true, '+ i + i'); asp.iniciar
+# load 'asp-sync.rb'; asp = Asp.new(true, '+ id + id'); asp.iniciar
 # el simbolo % representa al vacio
 class Asp
   attr_accessor :tabla
@@ -141,7 +142,7 @@ class Asp
     puts "Filling up nicknames"
     puts "--------------------"
     (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i] = e}
-    puts "nicknames => #{@entrada_nickname.inspect}"
+    puts "nicknames => #{@nicknames.inspect}"
     puts "==================================================="
   end
 
@@ -152,8 +153,6 @@ class Asp
     puts "   Los terminales 'prima', se representan por la minuscula de su letra. Ej: para T' es t"
     @entrada = @testing_entrada || gets.chomp.strip
     @entrada = @entrada.split(/[\sw]/)
-    fill_entrada_nickname
-
     puts @entrada.inspect
     verificar_entrada
     procesar if @errores.length == 0
