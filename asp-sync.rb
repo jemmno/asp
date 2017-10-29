@@ -16,8 +16,8 @@ class Asp
     @tabla = {}
     @no_terminales = []
     @simbolos_de_entrada = []
+    @nicknames = {}
     @entrada = ''
-    @entrada_nickname = {}
     @errores = []
     @pila = []
     @x = ''
@@ -63,8 +63,6 @@ class Asp
     @simbolos_de_entrada << '$'
   end
 
-
-
   def cargar_tabla()
     @no_terminales.each do |nt|
       @simbolos_de_entrada.each do |se|
@@ -108,11 +106,12 @@ class Asp
   def load_testing_data
     load_testing_no_terminales
     load_testing_simbolos_de_entrada
+    load_nicknames
     load_testing_tabla
   end
 
   def load_testing_no_terminales
-    @no_terminales = ['E',"e","T","t","F"]
+    @no_terminales = ['E',"E'","T","T'","F"]
   end
 
   def load_testing_simbolos_de_entrada
@@ -120,11 +119,11 @@ class Asp
   end
 
   def load_testing_tabla
-    e = ["Te",nil,nil,"TE'",nil,nil]
-    ee = [nil, "+Te",nil,nil,'%','%']
-    t = ["Ft",nil,nil,"Ft",nil,nil]
-    tt = [nil,'%', "*Ft",nil, '%','%']
-    f = ['id',nil,nil,'(E)', nil,nil]
+    e = ["TE'",nil,nil,"TE'",nil,nil]
+    ee = [nil, "+TE'",nil,nil,'%','%']
+    t = ["FT'",nil,nil,"FT'",nil,nil]
+    tt = [nil,'%', "*FT'",nil, '%', '%']
+    f = ['id',nil,nil,'(E)',nil, nil]
 
     producciones = e+ee+t+tt+f
     i = 0
@@ -137,11 +136,11 @@ class Asp
     end
   end
 
-  def fill_entrada_nickname
+  def load_nicknames
     puts "\n+++++++++++++++++++++++++++++++++++++++++++++++++++"
     puts "Filling up nicknames"
     puts "--------------------"
-    @entrada.each_with_index{|e,i| @entrada_nickname[i] = e}
+    (@simbolos_de_entrada+@no_terminales).each_with_index{|e,i| @nicknames[i] = e}
     puts "nicknames => #{@entrada_nickname.inspect}"
     puts "==================================================="
   end
