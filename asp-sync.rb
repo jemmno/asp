@@ -5,6 +5,7 @@
 # O load 'asp.rb'; asp = Asp.new(true, '+ i + i'); asp.iniciar
 # load 'asp-sync.rb'; asp = Asp.new(true, '+ id + id'); asp.iniciar
 # el simbolo % representa al vacio
+# el simbolo ~ es el caracter para representar el sync
 class Asp
   attr_accessor :tabla
   attr_accessor :no_terminales
@@ -86,12 +87,19 @@ class Asp
   end
 
   def imprimir_tabla
+    row = ''
+    (['---']+@simbolos_de_entrada).each{ |nt| row+="---#{nt}---|" }
+    puts row
+    sub_r = '_'
+    row.length.times {sub_r+='='}
+    puts sub_r
+    sep = '|'
     @no_terminales.each do |nt|
       row = ''
       @simbolos_de_entrada.each do |se|
-        row+= "#{@tabla[nt][se].inspect} "
+        row+= "---#{@tabla[nt][se] ? @tabla[nt][se] : " "}---#{sep}"
       end
-      puts row
+      puts "---#{nt}---#{sep}"+row
       sub_r = '_'
       row.length.times {sub_r+='_'}
       puts sub_r
